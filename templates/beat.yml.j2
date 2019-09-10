@@ -15,6 +15,12 @@
 
 {{ beat_shipper_conf | to_nice_yaml }}
 {% endif %}
+
+{% if setup_conf is defined %}############################# Setup #########################################
+
+{{ beat_setup_conf | to_nice_yaml }}
+{% endif %}
+
 ############################# Logging #########################################
 
 {{ beat_logging_conf | to_nice_yaml }}

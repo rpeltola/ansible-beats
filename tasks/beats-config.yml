@@ -8,6 +8,8 @@
 - set_fact: beat_output_conf={{ output_conf | merge_config('output') }}
 - set_fact: beat_shipper_conf={{ shipper_conf | merge_config('shipper') }}
   when: shipper_conf is defined
+- set_fact: beat_setup_conf={{ setup_conf | merge_config('setup') }}
+  when: setup_conf is defined
 - set_fact: beat_logging_conf={{ logging_conf | merge_config('logging') }}
 
 ## pid stat
