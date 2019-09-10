@@ -19,7 +19,7 @@
     name: "{{ beat }}"
     state: present
     application: "{{ beats_home_dir }}\\{{ beat }}.exe"
-    arguments: "-c {{ conf_file }} {{ daemon_args }}"
+    arguments: '-c "{{ conf_file }}" {{ daemon_args }}'
   when: not use_repository and os_type == 'win' and start_service
 
 - name: win - Start beats service
