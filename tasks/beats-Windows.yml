@@ -76,7 +76,7 @@
     remote_src: yes
     src: "%TEMP%\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}\\"
     dest: "{{ beats_home_dir }}\\"
-    force: no
+    force: yes
   register: beat_install
   notify: restart beat
   when: not use_repository and (downloaded_build_hash is defined and installed_build_hash is defined and downloaded_build_hash.stdout != installed_build_hash.stdout)
