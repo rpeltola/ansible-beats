@@ -40,13 +40,38 @@
     dest: "%TEMP%\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}.zip"
   when: not use_repository
 
-- name: Windows - Ensure {{ beat }} is installed from downloaded package
+- name: Windows - Unzip downloaded {{ beat }} package
   win_unzip:
     src: "%TEMP%\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}.zip"
     dest: "%TEMP%\\"
+    creates: "%TEMP%\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}"
   when: not use_repository
 
-- name: Move {{ beats_home_dir }}\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }} to {{ beats_home_dir }}
+# Beats service needs to be stopped for version change to prevent 'Access to the path is denied' errors
+- name: Windows - Read build_hash.txt from currently installed version
+  win_shell: 'Get-Content -Path "{{ beats_home_dir }}\\.build_hash.txt" -ErrorAction SilentlyContinue'
+  ignore_errors: yes
+  changed_when: False
+  register: installed_build_hash
+
+- name: Windows - Read build_hash.txt from download version
+  win_shell: 'Get-Content -Path "$env:temp\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}\\.build_hash.txt" -ErrorAction SilentlyContinue'
+  ignore_errors: yes
+  changed_when: False
+  register: downloaded_build_hash
+
+- name: "Windows - Check if '{{ beat }}' service is installed"
+  win_service:
+    name: "{{ beat }}"
+  register: beats_service_info
+
+- name: "Windows - Ensure '{{ beat }}' service is stopped for version change"
+  win_service:
+    name: "{{ beat }}"
+    state: stopped
+  when: beats_service_info.exists|bool and (downloaded_build_hash is defined and installed_build_hash is defined and downloaded_build_hash.stdout != installed_build_hash.stdout)
+
+- name: Windows - Move {{ beats_home_dir }}\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }} to {{ beats_home_dir }}
   win_copy:
     remote_src: yes
     src: "%TEMP%\\{{ beat }}-{{ beats_version }}-windows-{{ os_arch }}\\"
@@ -54,4 +79,4 @@
     force: no
   register: beat_install
   notify: restart beat
-  when: not use_repository
+  when: not use_repository and (downloaded_build_hash is defined and installed_build_hash is defined and downloaded_build_hash.stdout != installed_build_hash.stdout)
